@@ -240,6 +240,28 @@ io.on('connection', (socket) => {
     if (callback) callback({ success: true, bot: result.botPlayer });
   });
 
+  socket.on('room:sit-seat', ({ seatIndex }, callback) => {
+    const result = roomManager.sitSeat(socket.id, seatIndex);
+    if (result.error) {
+      if (callback) callback({ success: false, error: result.error });
+      return;
+    }
+    const code = roomManager.getRoomCode(socket.id);
+    io.to(code).emit('room:updated', roomManager.getRoomInfo(code));
+    if (callback) callback({ success: true, seatIndex: result.player.seatIndex });
+  });
+
+  socket.on('room:stand-up', (callback) => {
+    const result = roomManager.standUp(socket.id);
+    if (result.error) {
+      if (callback) callback({ success: false, error: result.error });
+      return;
+    }
+    const code = roomManager.getRoomCode(socket.id);
+    io.to(code).emit('room:updated', roomManager.getRoomInfo(code));
+    if (callback) callback({ success: true });
+  });
+
   socket.on('toggle-ready', (callback) => {
     const result = roomManager.toggleReady(socket.id);
     if (result) {

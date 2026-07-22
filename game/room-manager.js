@@ -212,6 +212,45 @@ class RoomManager {
   }
 
   /**
+   * Player sits at specific seat index
+   */
+  sitSeat(socketId, seatIndex) {
+    const code = this.playerRooms.get(socketId);
+    if (!code) return { error: 'Tidak di room' };
+    const room = this.rooms.get(code);
+    if (!room) return { error: 'Room tidak ditemukan' };
+    if (seatIndex < 0 || seatIndex >= room.maxPlayers) return { error: 'Kursi tidak valid' };
+
+    const seatOccupied = room.players.some(p => p.seatIndex === seatIndex && !p.isSpectator);
+    if (seatOccupied) return { error: 'Kursi sudah diduduki' };
+
+    const player = room.players.find(p => p.id === socketId);
+    if (!player) return { error: 'Pemain tidak ditemukan' };
+
+    player.seatIndex = seatIndex;
+    player.isSpectator = false;
+    return { room, player };
+  }
+
+  /**
+   * Player stands up from table to become spectator
+   */
+  standUp(socketId) {
+    const code = this.playerRooms.get(socketId);
+    if (!code) return { error: 'Tidak di room' };
+    const room = this.rooms.get(code);
+    if (!room) return { error: 'Room tidak ditemukan' };
+
+    const player = room.players.find(p => p.id === socketId);
+    if (!player) return { error: 'Pemain tidak ditemukan' };
+
+    player.isSpectator = true;
+    player.seatIndex = null;
+    player.isReady = false;
+    return { room, player };
+  }
+
+  /**
    * Check if game can start
    */
   canStart(code) {
@@ -308,13 +347,16 @@ class RoomManager {
       code: room.code,
       gameType: room.gameType,
       host: room.host,
-      players: room.players.map(p => ({
+      players: room.players.map((p, idx) => ({
         id: p.id,
         name: p.name,
         avatar: p.avatar,
         chips: p.chips,
         isReady: p.isReady,
-        isConnected: p.isConnected
+        isConnected: p.isConnected,
+        isBot: !!p.isBot,
+        isSpectator: !!p.isSpectator,
+        seatIndex: p.seatIndex !== undefined && p.seatIndex !== null ? p.seatIndex : idx
       })),
       maxPlayers: room.maxPlayers,
       status: room.status

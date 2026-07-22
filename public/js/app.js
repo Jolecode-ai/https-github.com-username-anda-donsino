@@ -208,6 +208,7 @@ function loginAsGuest(name) {
   App.player.chips = 10000;
   App.player.avatar = Math.floor(Math.random() * 8) + 1;
   updatePlayerDisplay();
+  saveSession(null);
   showView('gameSelect');
   showToast(`Selamat datang, Don "${name}"!`, 'success');
 }
@@ -485,20 +486,69 @@ function renderRoomPlayers() {
   const container = document.getElementById('roomPlayersList');
   if (!container || !App.room) return;
 
-  container.innerHTML = App.room.players.map(p => {
-    const isHost = p.id === App.room.host;
-    const isMe = socket && p.id === socket.id;
-    const avatarEmoji = AVATAR_EMOJIS[(p.avatar - 1) % AVATAR_EMOJIS.length];
+  const maxSeats = App.room.maxPlayers || 6;
+  const seatsHTML = [];
 
-    return `
-      <div class="room-player-card ${p.isReady ? 'ready' : ''} ${isHost ? 'host' : ''}">
-        <div class="player-avatar">${avatarEmoji}</div>
-        <div class="player-card-name">${escapeHtml(p.name)}${isMe ? ' (Kamu)' : ''}</div>
-        <div class="player-card-status ${p.isReady ? 'ready-text' : ''}">${p.isReady ? '✅ Ready' : '⏳ Menunggu'}</div>
-        <div class="player-card-chips">🪙 ${formatChips(p.chips)}</div>
-      </div>
-    `;
-  }).join('');
+  for (let i = 0; i < maxSeats; i++) {
+    const p = App.room.players.find(pl => pl.seatIndex === i && !pl.isSpectator) || App.room.players[i];
+    
+    if (p) {
+      const isHost = p.id === App.room.host;
+      const isMe = socket && p.id === socket.id;
+      const avatarEmoji = AVATAR_EMOJIS[(p.avatar - 1) % AVATAR_EMOJIS.length];
+
+      seatsHTML.push(`
+        <div class="room-player-card ${p.isReady ? 'ready' : ''} ${isHost ? 'host' : ''}">
+          <div class="seat-badge">Kursi ${i + 1}</div>
+          <div class="player-avatar">${avatarEmoji}</div>
+          <div class="player-card-name">${escapeHtml(p.name)}${isMe ? ' (Kamu)' : ''}</div>
+          <div class="player-card-status ${p.isReady ? 'ready-text' : ''}">${p.isReady ? '✅ Ready' : '⏳ Menunggu'}</div>
+          <div class="player-card-chips">🪙 ${formatChips(p.chips)}</div>
+          ${isMe ? `<button class="btn btn-sm btn-outline btn-stand-up" style="margin-top:0.4rem;font-size:0.7rem;padding:2px 6px;">🧍 Bangun</button>` : ''}
+        </div>
+      `);
+    } else {
+      seatsHTML.push(`
+        <div class="room-player-card empty-seat">
+          <div class="seat-badge">Kursi ${i + 1}</div>
+          <div class="player-avatar empty-avatar">🪑</div>
+          <div class="player-card-name" style="color:var(--text-muted);">Kosong</div>
+          <button class="btn btn-sm btn-gold btn-sit-seat" data-seat="${i}" style="margin-top:0.4rem;font-size:0.75rem;padding:3px 8px;">🪑 Duduk</button>
+        </div>
+      `);
+    }
+  }
+
+  container.innerHTML = seatsHTML.join('');
+
+  // Bind sit seat buttons
+  container.querySelectorAll('.btn-sit-seat').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const seatIndex = parseInt(btn.dataset.seat);
+      if (!socket) return;
+      socket.emit('room:sit-seat', { seatIndex }, (res) => {
+        if (res && res.success) {
+          showToast(`Berhasil duduk di Kursi ${seatIndex + 1}!`, 'success');
+          SoundFX.click();
+        } else {
+          showToast(res?.error || 'Gagal duduk', 'error');
+        }
+      });
+    });
+  });
+
+  // Bind stand up button
+  container.querySelectorAll('.btn-stand-up').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (!socket) return;
+      socket.emit('room:stand-up', (res) => {
+        if (res && res.success) {
+          showToast('Kamu berdiri dari meja (Penonton)', 'info');
+          SoundFX.click();
+        }
+      });
+    });
+  });
 
   // Show/hide start button (host only)
   const btnStart = document.getElementById('btnStartGame');
@@ -516,8 +566,89 @@ function renderRoomPlayers() {
   }
 }
 
+// ─── Session Persistence (localStorage) ────────────────
+function saveSession(roomCode = null) {
+  try {
+    const session = {
+      name: App.player.name,
+      displayName: App.player.displayName,
+      isGuest: App.player.isGuest,
+      chips: App.player.chips,
+      avatar: App.player.avatar,
+      roomCode: roomCode || App.room?.code || null
+    };
+    localStorage.setItem('donsino_session', JSON.stringify(session));
+  } catch (e) { /* ignore */ }
+}
+
+function clearSession() {
+  try {
+    localStorage.removeItem('donsino_session');
+  } catch (e) { /* ignore */ }
+}
+
+function restoreSession() {
+  try {
+    const raw = localStorage.getItem('donsino_session');
+    if (!raw) return false;
+    const session = JSON.parse(raw);
+    if (!session || !session.name) return false;
+
+    App.player.name = session.name;
+    App.player.displayName = session.displayName || `Don "${session.name}"`;
+    App.player.isGuest = !!session.isGuest;
+    App.player.chips = session.chips || 10000;
+    App.player.avatar = session.avatar || 1;
+    updatePlayerDisplay();
+
+    connectSocket();
+
+    // If session had a room code, auto rejoin
+    if (session.roomCode && socket) {
+      socket.emit('join-room', {
+        code: session.roomCode,
+        playerName: App.player.displayName,
+        avatar: App.player.avatar
+      }, (response) => {
+        if (response && response.success) {
+          App.room = response.room;
+          App.selectedGame = response.room.gameType;
+          showView('room');
+          updateRoomDisplay();
+          showToast(`Selamat datang kembali, ${App.player.displayName}!`, 'success');
+        } else {
+          showView('gameSelect');
+        }
+      });
+    } else {
+      showView('gameSelect');
+    }
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 // ─── Init ──────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   initFirebase();
-  showView('login');
+
+  // Bind all '🚪 Keluar Meja' buttons across game tables
+  document.querySelectorAll('.btn-leave-game').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (confirm('Keluar dari room dan kembali ke pemilihan game?')) {
+        if (socket) socket.emit('leave-room', () => {});
+        App.room = null;
+        saveSession(null);
+        showView('gameSelect');
+        SoundFX.click();
+      }
+    });
+  });
+
+  // Try restoring saved session on refresh
+  const restored = restoreSession();
+  if (!restored) {
+    showView('login');
+  }
 });
