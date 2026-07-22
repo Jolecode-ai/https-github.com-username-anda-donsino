@@ -216,7 +216,12 @@ function loginAsGuest(name) {
 function connectSocket() {
   if (socket && socket.connected) return;
   
-  socket = io({
+  // If hosted on static host like Netlify, point socket connection to active backend tunnel
+  const serverUrl = window.location.hostname.includes('netlify.app')
+    ? 'https://buffalo-lou-lottery-headline.trycloudflare.com'
+    : window.location.origin;
+
+  socket = io(serverUrl, {
     reconnection: true,
     reconnectionAttempts: 10,
     reconnectionDelay: 1000
