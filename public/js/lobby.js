@@ -249,6 +249,18 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  document.getElementById('btnAddBot')?.addEventListener('click', () => {
+    if (!socket) return;
+    socket.emit('add-bot', (response) => {
+      if (response && response.success) {
+        showToast(`Bot ${response.bot.name} bergabung!`, 'success');
+        SoundFX.click();
+      } else {
+        showToast(response.error || 'Gagal tambah bot', 'error');
+      }
+    });
+  });
+
   document.getElementById('btnStartGame').addEventListener('click', () => {
     if (!socket) return;
     socket.emit('start-game', (response) => {

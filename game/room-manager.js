@@ -122,7 +122,35 @@ class RoomManager {
     this.playerRooms.set(socket.id, code);
     socket.join(code);
 
-    return { room, player };
+  /**
+   * Add an AI bot to the room
+   */
+  addBot(code) {
+    const room = this.rooms.get(code);
+    if (!room) return { error: 'Room tidak ditemukan' };
+    if (room.status !== 'waiting') return { error: 'Game sudah dimulai' };
+    if (room.players.length >= room.maxPlayers) return { error: 'Room sudah penuh' };
+
+    const botNames = ['Bot Lucky 🤖', 'Bot Dealer 🤖', 'Bot Joker 🤖', 'Bot Viper 🤖', 'Bot Shadow 🤖'];
+    const usedNames = room.players.map(p => p.name);
+    const availableName = botNames.find(n => !usedNames.includes(n)) || `Bot AI ${room.players.length + 1} 🤖`;
+
+    const botId = `bot_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+
+    const botPlayer = {
+      id: botId,
+      name: availableName,
+      avatar: Math.floor(Math.random() * 8) + 1,
+      chips: 10000,
+      isReady: true, // Bots are always ready
+      isConnected: true,
+      isBot: true
+    };
+
+    room.players.push(botPlayer);
+    this.playerRooms.set(botId, code);
+
+    return { room, botPlayer };
   }
 
   /**

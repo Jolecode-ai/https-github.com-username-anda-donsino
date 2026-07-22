@@ -503,6 +503,8 @@ class GapleEngine {
         hand: (p.id === playerId || this.state.phase === 'roundEnd' || this.state.phase === 'gameEnd') ? p.hand : []
       }))
     };
+  }
+
   /**
    * Prepare for next round
    */

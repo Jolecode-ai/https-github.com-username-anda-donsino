@@ -35,10 +35,66 @@ const turnTimers = new Map();
 const TURN_TIMEOUT = 30000; // 30 seconds
 
 /**
+ * Execute an AI Bot action automatically
+ */
+function executeBotTurn(roomCode, botId) {
+  const engine = activeGames.get(roomCode);
+  const room = roomManager.getRoom(roomCode);
+  if (!engine || !room) return;
+
+  const currentPlayer = engine.state.players[engine.state.currentPlayerIndex];
+  if (!currentPlayer || currentPlayer.id !== botId) return;
+
+  let result;
+  try {
+    if (room.gameType === 'gaple') {
+      const validMoves = engine.getValidMoves(botId);
+      if (validMoves.length > 0) {
+        const move = validMoves[Math.floor(Math.random() * validMoves.length)];
+        const side = move.sides[Math.floor(Math.random() * move.sides.length)];
+        result = engine.handlePlay(botId, move.tileIndex, side);
+      } else if (room.players.length === 2 && engine.state.bonePile.length > 0) {
+        result = engine.handleDraw(botId);
+      } else {
+        result = engine.handlePass(botId);
+      }
+    } else {
+      // Poker or Qiu Qiu
+      const toCall = (engine.state.currentBet || 0) - (currentPlayer.currentBet || 0);
+      if (toCall <= 0) {
+        result = engine.handleAction(botId, 'check');
+      } else if (toCall <= currentPlayer.chips) {
+        result = engine.handleAction(botId, 'call');
+      } else {
+        result = engine.handleAction(botId, 'fold');
+      }
+    }
+  } catch (err) {
+    try { result = engine.handleTimeout(botId); } catch (e) { }
+  }
+
+  if (result && result.events) broadcastEvents(roomCode, result.events);
+  sendPlayerViews(roomCode);
+
+  // Check next turn
+  checkGameState(roomCode);
+}
+
+/**
  * Start a turn timer for the current player
  */
 function startTurnTimer(roomCode, playerId) {
   clearTurnTimer(roomCode);
+
+  // Check if player is AI Bot
+  if (playerId && (playerId.startsWith('bot_') || roomManager.getRoom(roomCode)?.players.find(p=>p.id===playerId)?.isBot)) {
+    const timer = setTimeout(() => {
+      executeBotTurn(roomCode, playerId);
+    }, 1200);
+    turnTimers.set(roomCode, timer);
+    return;
+  }
+
   const timer = setTimeout(() => {
     const engine = activeGames.get(roomCode);
     if (!engine) return;
@@ -167,6 +223,21 @@ io.on('connection', (socket) => {
     io.emit('lobby:rooms-updated', roomManager.getPublicRooms());
     socket.leave(result?.code);
     if (callback) callback({ success: true });
+  });
+
+  socket.on('add-bot', (callback) => {
+    const code = roomManager.getRoomCode(socket.id);
+    if (!code) {
+      if (callback) callback({ success: false, error: 'Tidak ada di room' });
+      return;
+    }
+    const result = roomManager.addBot(code);
+    if (result.error) {
+      if (callback) callback({ success: false, error: result.error });
+      return;
+    }
+    io.to(code).emit('room:updated', roomManager.getRoomInfo(code));
+    if (callback) callback({ success: true, bot: result.botPlayer });
   });
 
   socket.on('toggle-ready', (callback) => {
