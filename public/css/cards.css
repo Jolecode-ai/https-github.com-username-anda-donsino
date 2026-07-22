@@ -117,12 +117,59 @@
 
 /* Card Animations */
 .playing-card.dealing {
-  animation: dealCard 0.4s ease forwards;
+  animation: dealFromDealer 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
-@keyframes dealCard {
-  from { transform: translate(0, -100px) rotate(-10deg) scale(0.5); opacity: 0; }
-  to { transform: translate(0, 0) rotate(0) scale(1); opacity: 1; }
+@keyframes dealFromDealer {
+  0% { 
+    transform: translateY(-220px) scale(0.2) rotate(45deg); 
+    opacity: 0; 
+  }
+  70% {
+    transform: translateY(10px) scale(1.1) rotate(-5deg);
+    opacity: 1;
+  }
+  100% { 
+    transform: translateY(0) scale(1) rotate(0); 
+    opacity: 1; 
+  }
+}
+
+/* Casino Dealer Visual Top Deck */
+.casino-dealer-avatar {
+  position: absolute;
+  top: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.dealer-icon {
+  font-size: 2.2rem;
+  filter: drop-shadow(0 0 10px rgba(212, 168, 83, 0.6));
+  animation: dealerPulse 3s ease-in-out infinite;
+}
+
+.dealer-label {
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--accent-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  background: rgba(10, 10, 20, 0.7);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--accent-gold-dark);
+}
+
+@keyframes dealerPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
 }
 
 .playing-card:hover:not(.disabled) {
