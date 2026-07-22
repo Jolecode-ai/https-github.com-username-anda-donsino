@@ -340,7 +340,68 @@ document.addEventListener('DOMContentLoaded', () => {
     showView('room');
     SoundFX.click();
   });
+  // Bind mocking emoji reaction buttons
+  document.querySelectorAll('.emoji-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const emoji = btn.dataset.emoji;
+      if (!emoji || !socket) return;
+      socket.emit('emoji:reaction', { emoji });
+      SoundFX.click();
+    });
+  });
 });
+
+// ─── Render 4 Public Casino Rooms ───────────────────────
+function renderPublicRooms(rooms) {
+  const container = document.getElementById('publicRoomsGrid');
+  if (!container) return;
+
+  if (!rooms || rooms.length === 0) {
+    // Default fallback 4 rooms
+    rooms = [
+      { code: 'ROOM-1', name: '👑 Royal VIP Lounge', gameType: 'poker', playerCount: 0, maxPlayers: 9 },
+      { code: 'ROOM-2', name: '🁣 Domino Gaple Club', gameType: 'gaple', playerCount: 0, maxPlayers: 4 },
+      { code: 'ROOM-3', name: '🎲 High Rollers 99', gameType: 'qiuqiu', playerCount: 0, maxPlayers: 6 },
+      { code: 'ROOM-4', name: '🔥 Don\'Sino Arena', gameType: 'poker', playerCount: 0, maxPlayers: 9 }
+    ];
+  }
+
+  const gameIcons = { poker: '🃏 Poker', gaple: '🁣 Gaple', qiuqiu: '🎲 Qiu Qiu' };
+
+  container.innerHTML = rooms.slice(0, 4).map(r => `
+    <div class="public-room-card" data-code="${r.code}">
+      <div class="public-room-title">${escapeHtml(r.name)}</div>
+      <div class="public-room-game">${gameIcons[r.gameType] || r.gameType}</div>
+      <div class="public-room-count">👥 ${r.playerCount || 0}/${r.maxPlayers} Pemain</div>
+      <button class="btn btn-gold btn-sm public-room-btn" data-code="${r.code}">Masuk Room</button>
+    </div>
+  `).join('');
+
+  // Bind click handlers to join public rooms directly
+  container.querySelectorAll('.public-room-btn, .public-room-card').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const code = el.dataset.code;
+      if (!code || !socket) return;
+
+      socket.emit('join-room', {
+        code: code,
+        playerName: App.player.displayName,
+        avatar: App.player.avatar
+      }, (response) => {
+        if (response.success) {
+          App.room = response.room;
+          App.selectedGame = response.room.gameType;
+          showView('room');
+          updateRoomDisplay();
+          SoundFX.notify();
+        } else {
+          showToast(response.error || 'Gagal masuk room', 'error');
+        }
+      });
+    });
+  });
+}
 
 // ─── Update Room Display ───────────────────────────────
 function updateRoomDisplay() {
@@ -353,6 +414,17 @@ function updateRoomDisplay() {
   
   renderRoomPlayers();
 }
+
+// Fetch public rooms when viewing game select
+const origShowView = showView;
+showView = function(viewName) {
+  origShowView(viewName);
+  if (viewName === 'gameSelect' && socket) {
+    socket.emit('rooms:get', (res) => {
+      if (res && res.rooms) renderPublicRooms(res.rooms);
+    });
+  }
+};
 
 // ─── Show Results Overlay ──────────────────────────────
 function showResults(data) {

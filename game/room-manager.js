@@ -9,6 +9,52 @@ class RoomManager {
   constructor() {
     this.rooms = new Map();      // code -> Room
     this.playerRooms = new Map(); // socketId -> roomCode
+    this.initDefaultRooms();
+  }
+
+  /**
+   * Initialize 4 default public casino rooms
+   */
+  initDefaultRooms() {
+    const defaultRooms = [
+      { code: 'ROOM-1', name: '👑 Royal VIP Lounge', gameType: 'poker', maxPlayers: 9 },
+      { code: 'ROOM-2', name: '🁣 Domino Gaple Club', gameType: 'gaple', maxPlayers: 4 },
+      { code: 'ROOM-3', name: '🎲 High Rollers 99', gameType: 'qiuqiu', maxPlayers: 6 },
+      { code: 'ROOM-4', name: '🔥 Don\'Sino Arena', gameType: 'poker', maxPlayers: 9 }
+    ];
+
+    for (const r of defaultRooms) {
+      this.rooms.set(r.code, {
+        code: r.code,
+        name: r.name,
+        gameType: r.gameType,
+        host: null,
+        players: [],
+        maxPlayers: r.maxPlayers,
+        status: 'waiting',
+        isDefault: true,
+        createdAt: Date.now()
+      });
+    }
+  }
+
+  /**
+   * Get all active & public rooms for lobby list
+   */
+  getPublicRooms() {
+    const list = [];
+    for (const [code, room] of this.rooms.entries()) {
+      list.push({
+        code: room.code,
+        name: room.name || `Room ${room.code}`,
+        gameType: room.gameType,
+        playerCount: room.players.length,
+        maxPlayers: room.maxPlayers,
+        status: room.status,
+        isDefault: !!room.isDefault
+      });
+    }
+    return list;
   }
 
   /**
@@ -24,6 +70,7 @@ class RoomManager {
 
     const room = {
       code,
+      name: `VIP ${code}`,
       gameType,
       host: hostSocket.id,
       players: [{
@@ -66,6 +113,11 @@ class RoomManager {
       isConnected: true
     };
 
+    // If default room has no host, first joining player becomes host
+    if (!room.host) {
+      room.host = socket.id;
+    }
+
     room.players.push(player);
     this.playerRooms.set(socket.id, code);
     socket.join(code);
@@ -90,13 +142,20 @@ class RoomManager {
     room.players = room.players.filter(p => p.id !== socketId);
     this.playerRooms.delete(socketId);
 
-    // If room is empty, delete it
+    // If room is empty, reset status and delete if not a default public room
     if (room.players.length === 0) {
-      this.rooms.delete(code);
-      return { room: null, deleted: true, code };
+      if (room.isDefault) {
+        room.status = 'waiting';
+        room.host = null;
+        room.gameState = null;
+        return { room, deleted: false, code };
+      } else {
+        this.rooms.delete(code);
+        return { room: null, deleted: true, code };
+      }
     }
 
-    // If host left, transfer to next player
+    // If host left, transfer host role to next remaining player
     if (room.host === socketId) {
       room.host = room.players[0].id;
     }

@@ -268,10 +268,36 @@ function connectSocket() {
     appendChat(sender, message);
   });
 
+  // Emoji Mocking Reaction
+  socket.on('emoji:received', ({ senderName, emoji }) => {
+    showFloatingEmoji(senderName, emoji);
+  });
+
+  socket.on('lobby:rooms-updated', (rooms) => {
+    renderPublicRooms(rooms);
+  });
+
   // Specific game events
   setupPokerSocketEvents();
   setupGapleSocketEvents();
   setupQiuQiuSocketEvents();
+}
+
+function showFloatingEmoji(senderName, emojiSymbol) {
+  SoundFX.notify();
+  const el = document.createElement('div');
+  el.className = 'floating-emoji';
+  el.textContent = emojiSymbol;
+  
+  // Random horizontal position around center
+  const posX = Math.random() * 60 + 20; // 20% to 80%
+  const posY = Math.random() * 40 + 30; // 30% to 70%
+  
+  el.style.left = `${posX}%`;
+  el.style.top = `${posY}%`;
+  
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2300);
 }
 
 // ─── View Router ───────────────────────────────────────

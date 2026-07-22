@@ -140,11 +140,31 @@ io.on('connection', (socket) => {
     callback({ success: true, room: roomManager.getRoomInfo(code.toUpperCase()) });
   });
 
+  socket.on('rooms:get', (callback) => {
+    if (callback) callback({ rooms: roomManager.getPublicRooms() });
+  });
+
+  socket.on('emoji:reaction', ({ emoji }) => {
+    const code = roomManager.getRoomCode(socket.id);
+    if (!code) return;
+    const room = roomManager.getRoom(code);
+    if (!room) return;
+    const player = room.players.find(p => p.id === socket.id);
+    if (!player) return;
+
+    io.to(code).emit('emoji:received', {
+      senderId: socket.id,
+      senderName: player.name,
+      emoji: emoji
+    });
+  });
+
   socket.on('leave-room', (callback) => {
     const result = roomManager.leaveRoom(socket.id);
     if (result && !result.deleted) {
       io.to(result.code).emit('room:updated', roomManager.getRoomInfo(result.code));
     }
+    io.emit('lobby:rooms-updated', roomManager.getPublicRooms());
     socket.leave(result?.code);
     if (callback) callback({ success: true });
   });
