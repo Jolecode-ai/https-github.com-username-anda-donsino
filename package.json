@@ -1,0 +1,17 @@
+{
+  "name": "donsino",
+  "version": "1.0.0",
+  "description": "Don'Sino — Multiplayer Poker, Gaple & Qiu Qiu",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": ["poker", "gaple", "qiuqiu", "domino", "multiplayer", "game"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.0",
+    "socket.io": "^4.8.0"
+  }
+}

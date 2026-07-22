@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="description" content="Don'Sino — Platform multiplayer Poker, Gaple & Qiu Qiu bersama teman">
+  <meta name="theme-color" content="#0a0a0f">
+  <title>Don'Sino — Poker, Gaple & Qiu Qiu</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Firebase SDKs (from CDN) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  
+  <!-- Socket.IO -->
+  <script src="/socket.io/socket.io.js"></script>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/lobby.css">
+  <link rel="stylesheet" href="/css/cards.css">
+  <link rel="stylesheet" href="/css/poker.css">
+  <link rel="stylesheet" href="/css/gaple.css">
+  <link rel="stylesheet" href="/css/qiuqiu.css">
+</head>
+<body>
+  <!-- ═══ PARTICLES BACKGROUND ═══ -->
+  <div id="particles" class="particles-bg"></div>
+
+  <!-- ═══ TOAST NOTIFICATIONS ═══ -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!-- LOGIN VIEW -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <section id="viewLogin" class="view active">
+    <div class="login-container">
+      <div class="logo-wrapper">
+        <h1 class="logo">Don'<span class="logo-accent">Sino</span></h1>
+        <p class="logo-tagline">Poker • Gaple • Qiu Qiu</p>
+        <div class="logo-glow"></div>
+      </div>
+
+      <!-- Auth Tabs -->
+      <div class="auth-card glass-card">
+        <div class="auth-tabs">
+          <button class="auth-tab active" data-tab="login" id="btnTabLogin">Masuk</button>
+          <button class="auth-tab" data-tab="register" id="btnTabRegister">Daftar</button>
+        </div>
+
+        <!-- Login Form -->
+        <form id="formLogin" class="auth-form">
+          <div class="input-group">
+            <label for="loginEmail">Email</label>
+            <input type="email" id="loginEmail" placeholder="email@contoh.com" required>
+          </div>
+          <div class="input-group">
+            <label for="loginPassword">Password</label>
+            <input type="password" id="loginPassword" placeholder="••••••••" required>
+          </div>
+          <button type="submit" class="btn btn-gold btn-full" id="btnLogin">
+            <span>Masuk</span>
+            <div class="btn-shine"></div>
+          </button>
+          <p class="auth-divider"><span>atau</span></p>
+          <button type="button" class="btn btn-outline btn-full" id="btnGoogleLogin">
+            <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.173 0 7.548 0 9s.348 2.827.957 4.039l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
+            <span>Login dengan Google</span>
+          </button>
+        </form>
+
+        <!-- Register Form -->
+        <form id="formRegister" class="auth-form hidden">
+          <div class="input-group">
+            <label for="regNickname">Nickname</label>
+            <div class="nickname-preview">
+              <span class="nick-prefix">Don "</span>
+              <input type="text" id="regNickname" placeholder="nama kamu" required maxlength="15">
+              <span class="nick-suffix">"</span>
+            </div>
+          </div>
+          <div class="input-group">
+            <label for="regEmail">Email</label>
+            <input type="email" id="regEmail" placeholder="email@contoh.com" required>
+          </div>
+          <div class="input-group">
+            <label for="regPassword">Password</label>
+            <input type="password" id="regPassword" placeholder="Min. 6 karakter" required minlength="6">
+          </div>
+          <button type="submit" class="btn btn-gold btn-full" id="btnRegister">
+            <span>Buat Akun</span>
+            <div class="btn-shine"></div>
+          </button>
+        </form>
+
+        <!-- Guest Mode -->
+        <div class="guest-section">
+          <p class="guest-text">Atau main tanpa akun:</p>
+          <div class="guest-input-row">
+            <input type="text" id="guestName" placeholder="Nama kamu" maxlength="15">
+            <button class="btn btn-outline" id="btnGuest">Main Sebagai Tamu</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!-- GAME SELECTION VIEW -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <section id="viewGameSelect" class="view">
+    <header class="top-bar">
+      <div class="top-bar-left">
+        <h2 class="top-bar-logo">Don'<span class="logo-accent">Sino</span></h2>
+      </div>
+      <div class="top-bar-center">
+        <span class="player-name" id="displayPlayerName"></span>
+      </div>
+      <div class="top-bar-right">
+        <div class="chip-balance" id="displayChipBalance">
+          <span class="chip-icon">🪙</span>
+          <span class="chip-amount">10,000</span>
+        </div>
+        <button class="btn btn-sm btn-outline" id="btnLogout">Keluar</button>
+      </div>
+    </header>
+
+    <div class="game-select-content">
+      <h2 class="section-title">Pilih Permainan</h2>
+      <div class="game-cards">
+        <div class="game-card" data-game="poker" id="cardPoker">
+          <div class="game-card-bg poker-bg"></div>
+          <div class="game-card-content">
+            <div class="game-card-icon">🃏</div>
+            <h3>Texas Hold'em</h3>
+            <p>Poker</p>
+            <span class="game-card-players">2-9 Pemain</span>
+          </div>
+          <div class="game-card-shine"></div>
+        </div>
+
+        <div class="game-card" data-game="gaple" id="cardGaple">
+          <div class="game-card-bg gaple-bg"></div>
+          <div class="game-card-content">
+            <div class="game-card-icon">🁣</div>
+            <h3>Gaple</h3>
+            <p>Domino</p>
+            <span class="game-card-players">2-4 Pemain</span>
+          </div>
+          <div class="game-card-shine"></div>
+        </div>
+
+        <div class="game-card" data-game="qiuqiu" id="cardQiuQiu">
+          <div class="game-card-bg qiuqiu-bg"></div>
+          <div class="game-card-content">
+            <div class="game-card-icon">🎲</div>
+            <h3>Qiu Qiu</h3>
+            <p>99 Domino</p>
+            <span class="game-card-players">2-6 Pemain</span>
+          </div>
+          <div class="game-card-shine"></div>
+        </div>
+      </div>
+
+      <!-- Room Action Modal -->
+      <div id="modalRoomAction" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-content glass-card">
+          <h3 id="modalGameTitle">Texas Hold'em</h3>
+          <div class="modal-buttons">
+            <button class="btn btn-gold btn-full" id="btnCreateRoom">
+              <span>🏠 Buat Room</span>
+            </button>
+            <button class="btn btn-outline btn-full" id="btnJoinRoomModal">
+              <span>🚪 Gabung Room</span>
+            </button>
+          </div>
+          <div id="joinRoomInput" class="join-room-input hidden">
+            <input type="text" id="inputRoomCode" placeholder="Kode Room (6 huruf)" maxlength="6" class="room-code-input">
+            <button class="btn btn-gold" id="btnJoinRoom">Gabung</button>
+          </div>
+          <button class="modal-close" id="btnCloseModal">&times;</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!-- ROOM LOBBY VIEW -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <section id="viewRoom" class="view">
+    <header class="top-bar">
+      <div class="top-bar-left">
+        <button class="btn btn-sm btn-outline" id="btnBackToSelect">← Kembali</button>
+      </div>
+      <div class="top-bar-center">
+        <span class="room-game-type" id="roomGameType"></span>
+      </div>
+      <div class="top-bar-right">
+        <div class="chip-balance" id="roomChipBalance">
+          <span class="chip-icon">🪙</span>
+          <span class="chip-amount">10,000</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="room-content">
+      <div class="room-code-display glass-card">
+        <p class="room-code-label">Kode Room</p>
+        <div class="room-code-value" id="roomCodeDisplay">ABC123</div>
+        <button class="btn btn-sm btn-outline" id="btnCopyCode">📋 Salin</button>
+      </div>
+
+      <div class="room-players-grid" id="roomPlayersList">
+        <!-- Players will be injected here -->
+      </div>
+
+      <div class="room-actions">
+        <button class="btn btn-gold" id="btnReady">✋ Ready</button>
+        <button class="btn btn-gold btn-large hidden" id="btnStartGame">🎮 Mulai Game</button>
+        <button class="btn btn-outline" id="btnBuyChips">🪙 Beli Chip</button>
+      </div>
+
+      <!-- Buy Chips Modal -->
+      <div id="modalBuyChips" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-content glass-card">
+          <h3>🪙 Beli Chip</h3>
+          <div class="chip-packages">
+            <button class="chip-package" data-amount="1000">
+              <span class="package-amount">1,000</span>
+              <span class="package-label">Starter</span>
+            </button>
+            <button class="chip-package" data-amount="5000">
+              <span class="package-amount">5,000</span>
+              <span class="package-label">Bronze</span>
+            </button>
+            <button class="chip-package" data-amount="10000">
+              <span class="package-amount">10,000</span>
+              <span class="package-label">Silver</span>
+            </button>
+            <button class="chip-package" data-amount="25000">
+              <span class="package-amount">25,000</span>
+              <span class="package-label">Gold</span>
+            </button>
+            <button class="chip-package" data-amount="50000">
+              <span class="package-amount">50,000</span>
+              <span class="package-label">Platinum</span>
+            </button>
+            <button class="chip-package" data-amount="100000">
+              <span class="package-amount">100,000</span>
+              <span class="package-label">Diamond</span>
+            </button>
+          </div>
+          <button class="modal-close" id="btnCloseBuyChips">&times;</button>
+        </div>
+      </div>
+
+      <!-- Chat -->
+      <div class="room-chat glass-card">
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-input-row">
+          <input type="text" id="chatInput" placeholder="Ketik pesan..." maxlength="200">
+          <button class="btn btn-sm btn-gold" id="btnSendChat">Kirim</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!-- POKER GAME VIEW -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <section id="viewPoker" class="view">
+    <header class="game-top-bar">
+      <div class="game-info-left">
+        <span class="game-round" id="pokerRound">Ronde 1</span>
+        <span class="game-blinds" id="pokerBlinds">Blind: 50/100</span>
+      </div>
+      <div class="game-info-center">
+        <span class="game-phase" id="pokerPhase">Pre-Flop</span>
+      </div>
+      <div class="game-info-right">
+        <div class="chip-balance">
+          <span class="chip-icon">🪙</span>
+          <span class="chip-amount" id="pokerMyChips">10,000</span>
+        </div>
+        <button class="btn btn-sm btn-outline" id="btnPokerMenu">☰</button>
+      </div>
+    </header>
+
+    <div class="poker-table-container">
+      <div class="poker-table" id="pokerTable">
+        <div class="poker-felt"></div>
+        
+        <!-- Player seats (positioned via CSS) -->
+        <div class="poker-seats" id="pokerSeats">
+          <!-- Seats injected dynamically -->
+        </div>
+        
+        <!-- Community Cards -->
+        <div class="community-cards" id="pokerCommunityCards">
+          <!-- Cards injected dynamically -->
+        </div>
+
+        <!-- Pot Display -->
+        <div class="pot-display" id="pokerPot">
+          <span class="pot-label">Pot</span>
+          <span class="pot-amount">0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Player's Hole Cards -->
+    <div class="my-cards" id="pokerMyCards">
+      <!-- Cards injected dynamically -->
+    </div>
+
+    <!-- Action Bar -->
+    <div class="action-bar" id="pokerActionBar">
+      <div class="action-timer">
+        <div class="timer-bar" id="pokerTimerBar"></div>
+      </div>
+      <div class="action-buttons">
+        <button class="btn btn-fold" id="btnFold">Fold</button>
+        <button class="btn btn-check" id="btnCheck">Check</button>
+        <button class="btn btn-call" id="btnCall">Call <span id="callAmount"></span></button>
+        <button class="btn btn-raise" id="btnRaise">Raise</button>
+        <button class="btn btn-allin" id="btnAllIn">All In</button>
+      </div>
+      <div class="raise-slider-container hidden" id="raiseSliderContainer">
+        <input type="range" id="raiseSlider" min="0" max="10000" step="50">
+        <div class="raise-amount">
+          <input type="number" id="raiseAmount" min="0" step="50">
+          <button class="btn btn-gold btn-sm" id="btnConfirmRaise">Raise</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!-- GAPLE GAME VIEW -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <section id="viewGaple" class="view">
+    <header class="game-top-bar">
+      <div class="game-info-left">
+        <span class="game-round" id="gapleRound">Ronde 1</span>
+        <span class="game-scores" id="gapleScores">Skor: 0</span>
+      </div>
+      <div class="game-info-center">
+        <span class="game-phase" id="gaplePhase">Bermain</span>
+      </div>
+      <div class="game-info-right">
+        <div class="chip-balance">
+          <span class="chip-icon">🪙</span>
+          <span class="chip-amount" id="gapleMyChips">10,000</span>
+        </div>
+        <button class="btn btn-sm btn-outline" id="btnGapleMenu">☰</button>
+      </div>
+    </header>
+
+    <div class="gaple-table-container">
+      <div class="gaple-table" id="gapleTable">
+        <!-- Opponent hands (face down) -->
+        <div class="gaple-opponents" id="gapleOpponents">
+          <!-- Injected dynamically -->
+        </div>
+
+        <!-- Domino Chain -->
+        <div class="gaple-chain-wrapper">
+          <div class="gaple-chain" id="gapleChain">
+            <!-- Dominoes injected dynamically -->
+          </div>
+        </div>
+
+        <!-- Bone Pile indicator -->
+        <div class="bone-pile hidden" id="gapleBonePile">
+          <span class="bone-pile-count">0</span>
+          <button class="btn btn-sm btn-outline" id="btnDrawTile">Ambil</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Player's Hand -->
+    <div class="my-dominoes" id="gapleMyHand">
+      <!-- Dominoes injected dynamically -->
+    </div>
+
+    <!-- Action Bar -->
+    <div class="action-bar" id="gapleActionBar">
+      <div class="action-timer">
+        <div class="timer-bar" id="gapleTimerBar"></div>
+      </div>
+      <div class="action-buttons">
+        <button class="btn btn-pass" id="btnGaplePass">Lewat</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!-- QIU QIU GAME VIEW -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <section id="viewQiuQiu" class="view">
+    <header class="game-top-bar">
+      <div class="game-info-left">
+        <span class="game-round" id="qiuqiuRound">Ronde 1</span>
+        <span class="game-blinds" id="qiuqiuBlinds">Blind: 50/100</span>
+      </div>
+      <div class="game-info-center">
+        <span class="game-phase" id="qiuqiuPhase">Dealing</span>
+      </div>
+      <div class="game-info-right">
+        <div class="chip-balance">
+          <span class="chip-icon">🪙</span>
+          <span class="chip-amount" id="qiuqiuMyChips">10,000</span>
+        </div>
+        <button class="btn btn-sm btn-outline" id="btnQiuQiuMenu">☰</button>
+      </div>
+    </header>
+
+    <div class="qiuqiu-table-container">
+      <div class="qiuqiu-table" id="qiuqiuTable">
+        <div class="qiuqiu-felt"></div>
+
+        <!-- Player seats -->
+        <div class="qiuqiu-seats" id="qiuqiuSeats">
+          <!-- Injected dynamically -->
+        </div>
+
+        <!-- Pot -->
+        <div class="pot-display" id="qiuqiuPot">
+          <span class="pot-label">Pot</span>
+          <span class="pot-amount">0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Player's Tiles -->
+    <div class="my-dominoes" id="qiuqiuMyHand">
+      <!-- Dominoes injected dynamically -->
+    </div>
+
+    <!-- Action Bar -->
+    <div class="action-bar" id="qiuqiuActionBar">
+      <div class="action-timer">
+        <div class="timer-bar" id="qiuqiuTimerBar"></div>
+      </div>
+      <div class="action-buttons">
+        <button class="btn btn-fold" id="btnQQFold">Fold</button>
+        <button class="btn btn-check" id="btnQQCheck">Check</button>
+        <button class="btn btn-call" id="btnQQCall">Call <span id="qqCallAmount"></span></button>
+        <button class="btn btn-raise" id="btnQQRaise">Raise</button>
+      </div>
+      <div class="raise-slider-container hidden" id="qqRaiseSliderContainer">
+        <input type="range" id="qqRaiseSlider" min="0" max="10000" step="50">
+        <div class="raise-amount">
+          <input type="number" id="qqRaiseAmount" min="0" step="50">
+          <button class="btn btn-gold btn-sm" id="btnQQConfirmRaise">Raise</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!-- SHOWDOWN / RESULTS OVERLAY -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <div id="overlayResults" class="overlay hidden">
+    <div class="results-card glass-card">
+      <h2 id="resultsTitle" class="results-title">🏆 Pemenang!</h2>
+      <div id="resultsContent" class="results-content">
+        <!-- Results injected dynamically -->
+      </div>
+      <div class="results-actions">
+        <button class="btn btn-gold" id="btnNextRound">Ronde Berikutnya</button>
+        <button class="btn btn-outline" id="btnBackToRoom">Kembali ke Lobby</button>
+      </div>
+      <div class="tax-info" id="taxInfo">
+        <span>Pajak 2.5%: <span id="taxAmount">0</span> chip</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SCRIPTS ═══ -->
+  <script src="/js/sounds.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/lobby.js"></script>
+  <script src="/js/poker-ui.js"></script>
+  <script src="/js/gaple-ui.js"></script>
+  <script src="/js/qiuqiu-ui.js"></script>
+</body>
+</html>

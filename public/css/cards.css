@@ -1,0 +1,320 @@
+/* ═══════════════════════════════════════════════════════
+   DON'SINO — Playing Cards & Domino Tiles (CSS-rendered)
+   ═══════════════════════════════════════════════════════ */
+
+/* ─── Playing Card ────────────────────────────────────── */
+.playing-card {
+  width: 65px;
+  height: 95px;
+  border-radius: 8px;
+  position: relative;
+  cursor: default;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  perspective: 600px;
+  flex-shrink: 0;
+}
+
+.playing-card .card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
+
+.playing-card.flipped .card-inner {
+  transform: rotateY(180deg);
+}
+
+.card-front, .card-back {
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Card Front */
+.card-front {
+  background: linear-gradient(145deg, #ffffff, #f0f0f0);
+  border: 1px solid #ccc;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 4px 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.card-rank-suit {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1;
+}
+
+.card-rank-suit.bottom {
+  align-self: flex-end;
+  transform: rotate(180deg);
+}
+
+.card-rank {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.card-suit {
+  font-size: 0.75rem;
+}
+
+.card-center-suit {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.8rem;
+}
+
+.card-front.red { color: #c0392b; }
+.card-front.black { color: #1a1a1a; }
+
+/* Card Back */
+.card-back {
+  background: linear-gradient(135deg, #1a3a5c, #0d2137);
+  border: 2px solid var(--accent-gold-dark);
+  transform: rotateY(180deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.card-back::after {
+  content: "D'S";
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--accent-gold);
+  letter-spacing: 0.1em;
+  border: 1px solid var(--accent-gold-dark);
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.card-back-pattern {
+  position: absolute;
+  inset: 4px;
+  border: 1px solid rgba(212, 168, 83, 0.2);
+  border-radius: 4px;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 4px,
+    rgba(212, 168, 83, 0.03) 4px,
+    rgba(212, 168, 83, 0.03) 8px
+  );
+}
+
+/* Card Animations */
+.playing-card.dealing {
+  animation: dealCard 0.4s ease forwards;
+}
+
+@keyframes dealCard {
+  from { transform: translate(0, -100px) rotate(-10deg) scale(0.5); opacity: 0; }
+  to { transform: translate(0, 0) rotate(0) scale(1); opacity: 1; }
+}
+
+.playing-card:hover:not(.disabled) {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 25px rgba(212, 168, 83, 0.3);
+}
+
+.playing-card.highlight {
+  box-shadow: 0 0 15px rgba(212, 168, 83, 0.6);
+  border-color: var(--accent-gold);
+}
+
+/* ─── Domino Tile ─────────────────────────────────────── */
+.domino-tile {
+  width: 45px;
+  height: 90px;
+  border-radius: 8px;
+  position: relative;
+  cursor: default;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.domino-tile.horizontal {
+  width: 90px;
+  height: 45px;
+}
+
+.domino-front {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(145deg, #f5f5f0, #e8e8e0);
+  border: 2px solid #333;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.5);
+}
+
+.domino-tile.horizontal .domino-front {
+  flex-direction: row;
+}
+
+.domino-half {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  padding: 4px;
+  position: relative;
+}
+
+.domino-divider {
+  width: 80%;
+  height: 2px;
+  background: #555;
+  align-self: center;
+  justify-self: center;
+  margin: 0 auto;
+  border-radius: 1px;
+}
+
+.domino-tile.horizontal .domino-divider {
+  width: 2px;
+  height: 80%;
+}
+
+.domino-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #444, #111);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
+  align-self: center;
+  justify-self: center;
+}
+
+/* Dot positions in 3x3 grid */
+.dot-1 { grid-area: 1/1; }
+.dot-2 { grid-area: 1/3; }
+.dot-3 { grid-area: 2/1; }
+.dot-4 { grid-area: 2/2; }
+.dot-5 { grid-area: 2/3; }
+.dot-6 { grid-area: 3/1; }
+.dot-7 { grid-area: 3/3; }
+
+/* Domino Back */
+.domino-back {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #1a3a5c, #0d2137);
+  border: 2px solid var(--accent-gold-dark);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.domino-back::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 1px solid rgba(212, 168, 83, 0.2);
+  border-radius: 4px;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 3px,
+    rgba(212, 168, 83, 0.05) 3px,
+    rgba(212, 168, 83, 0.05) 6px
+  );
+}
+
+/* Domino interactions */
+.domino-tile.clickable {
+  cursor: pointer;
+}
+
+.domino-tile.clickable:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 20px rgba(212, 168, 83, 0.3);
+}
+
+.domino-tile.valid-move {
+  box-shadow: 0 0 12px rgba(46, 204, 113, 0.5);
+  border-color: var(--accent-emerald-light);
+}
+
+.domino-tile.selected {
+  transform: translateY(-12px);
+  box-shadow: 0 0 20px rgba(212, 168, 83, 0.6);
+}
+
+.domino-tile.dealing {
+  animation: dealDomino 0.3s ease forwards;
+}
+
+@keyframes dealDomino {
+  from { transform: scale(0.3) rotate(15deg); opacity: 0; }
+  to { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+/* ─── Small card for opponent display ─────────────────── */
+.card-mini {
+  width: 30px;
+  height: 42px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.card-mini .card-back {
+  border-width: 1px;
+  border-radius: 4px;
+}
+
+.card-mini .card-back::after {
+  font-size: 0.4rem;
+  padding: 3px;
+}
+
+.domino-mini {
+  width: 20px;
+  height: 38px;
+  border-radius: 4px;
+}
+
+.domino-mini .domino-back {
+  border-width: 1px;
+  border-radius: 4px;
+}
+
+/* ─── Responsive ──────────────────────────────────────── */
+@media (max-width: 768px) {
+  .playing-card {
+    width: 52px;
+    height: 76px;
+  }
+
+  .card-rank { font-size: 0.75rem; }
+  .card-suit { font-size: 0.6rem; }
+  .card-center-suit { font-size: 1.3rem; }
+
+  .domino-tile {
+    width: 36px;
+    height: 72px;
+  }
+
+  .domino-tile.horizontal {
+    width: 72px;
+    height: 36px;
+  }
+
+  .domino-dot {
+    width: 5px;
+    height: 5px;
+  }
+}

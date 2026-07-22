@@ -1,0 +1,225 @@
+/* ═══════════════════════════════════════════════════════
+   DON'SINO — Gaple Table Styles
+   ═══════════════════════════════════════════════════════ */
+
+.gaple-table-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  padding-bottom: 180px;
+}
+
+.gaple-table {
+  position: relative;
+  width: 100%;
+  max-width: 750px;
+  min-height: 350px;
+  border-radius: var(--radius-xl);
+  background: radial-gradient(ellipse at center, #1a2a5c 0%, #121a3a 50%, #0a1025 100%);
+  border: 6px solid #1a1530;
+  box-shadow:
+    inset 0 0 50px rgba(0, 0, 0, 0.3),
+    0 0 0 3px var(--accent-gold-dark),
+    0 0 0 7px #0f0a1a,
+    0 10px 40px rgba(0, 0, 0, 0.5);
+  padding: 1rem;
+}
+
+/* ─── Opponents ───────────────────────────────────────── */
+.gaple-opponents {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-bottom: 1rem;
+}
+
+.gaple-opponent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.gaple-opponent .opponent-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.gaple-opponent .opponent-tiles-count {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--accent-gold);
+}
+
+.opponent-tiles {
+  display: flex;
+  gap: 2px;
+}
+
+.gaple-opponent.active-turn .opponent-name {
+  color: var(--accent-gold-light);
+  text-shadow: 0 0 10px rgba(212, 168, 83, 0.5);
+}
+
+.gaple-opponent.passed {
+  opacity: 0.5;
+}
+
+/* ─── Domino Chain ────────────────────────────────────── */
+.gaple-chain-wrapper {
+  overflow: auto;
+  max-height: 250px;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gaple-chain {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  align-items: center;
+  justify-content: center;
+  min-height: 100px;
+}
+
+.gaple-chain .domino-tile {
+  transition: all 0.3s ease;
+}
+
+.gaple-chain .domino-tile.just-played {
+  animation: snapDomino 0.4s ease;
+}
+
+@keyframes snapDomino {
+  0% { transform: scale(0.5) rotate(10deg); opacity: 0; }
+  60% { transform: scale(1.1) rotate(-2deg); }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+/* ─── Bone Pile ───────────────────────────────────────── */
+.bone-pile {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--glass-bg);
+  padding: 0.5rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+}
+
+.bone-pile-count {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+/* ─── My Dominoes ─────────────────────────────────────── */
+.my-dominoes {
+  position: fixed;
+  bottom: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  z-index: 5;
+  padding: 0.5rem;
+  max-width: 95vw;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.my-dominoes .domino-tile {
+  cursor: pointer;
+}
+
+.my-dominoes .domino-tile:hover {
+  transform: translateY(-10px);
+}
+
+.my-dominoes .domino-tile.valid-move::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border: 2px solid var(--accent-emerald-light);
+  border-radius: 10px;
+  animation: pulseValid 1.5s infinite;
+}
+
+@keyframes pulseValid {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* Side selection popup */
+.side-select {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.5rem;
+  background: var(--glass-bg);
+  padding: 0.5rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(10px);
+  margin-bottom: 8px;
+  z-index: 10;
+  white-space: nowrap;
+}
+
+.side-select .btn {
+  font-size: 0.75rem;
+  padding: 0.4rem 0.8rem;
+}
+
+/* ─── Score Board ─────────────────────────────────────── */
+.gaple-scoreboard {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 0.5rem 0.75rem;
+  backdrop-filter: blur(10px);
+}
+
+.scoreboard-title {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.3rem;
+}
+
+.scoreboard-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.75rem;
+}
+
+.scoreboard-name { color: var(--text-secondary); }
+.scoreboard-score { color: var(--accent-gold); font-family: var(--font-mono); font-weight: 600; }
+
+/* ─── Responsive ──────────────────────────────────────── */
+@media (max-width: 768px) {
+  .gaple-table {
+    min-height: 250px;
+    padding: 0.5rem;
+  }
+
+  .gaple-opponents { gap: 1rem; }
+
+  .my-dominoes { gap: 4px; }
+}
