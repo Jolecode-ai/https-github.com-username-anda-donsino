@@ -104,13 +104,7 @@ class GapleEngine {
       p.hasPassed = false;
     });
 
-    const rng = new RNG();
-    let tiles = this._generateTiles();
-    // Shuffle tiles using Fisher-Yates and RNG
-    for (let i = tiles.length - 1; i > 0; i--) {
-      const j = Math.floor(rng.random() * (i + 1));
-      [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
-    }
+    let tiles = RNG.shuffle(this._generateTiles());
 
     const numPlayers = this.state.players.length;
     let tilesPerPlayer = 7;
@@ -509,6 +503,11 @@ class GapleEngine {
         hand: (p.id === playerId || this.state.phase === 'roundEnd' || this.state.phase === 'gameEnd') ? p.hand : []
       }))
     };
+  /**
+   * Prepare for next round
+   */
+  nextRound() {
+    this.state.phase = 'waiting';
   }
 }
 

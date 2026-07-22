@@ -57,12 +57,7 @@ class QiuQiuEngine {
    * @param {Array} array 
    */
   _shuffle(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-      // Assuming RNG has a double or randInt method, fallback to Math.random
-      const randomValue = (typeof RNG !== 'undefined' && typeof RNG.random === 'function') ? RNG.random() : Math.random();
-      const j = Math.floor(randomValue * (i + 1));
-      [array[i], array[j]] = [array[j], array[i]];
-    }
+    return RNG.shuffle(array);
   }
 
   /**
