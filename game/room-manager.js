@@ -122,6 +122,9 @@ class RoomManager {
     this.playerRooms.set(socket.id, code);
     socket.join(code);
 
+    return { room, player };
+  }
+
   /**
    * Add an AI bot to the room
    */
